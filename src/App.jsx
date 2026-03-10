@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import { templates } from './templates'
 import './App.css'
 
@@ -8,7 +8,16 @@ export default function App() {
   const [slides, setSlides] = useState([createSlide()])
   const [activeIdx, setActiveIdx] = useState(0)
   const [templateId, setTemplateId] = useState('simple-white')
+  const [mobileTab, setMobileTab] = useState('preview') // 'edit' | 'preview'
+  const [isMobile, setIsMobile] = useState(false)
   const previewRef = useRef(null)
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth <= 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
 
   const template = templates.find(t => t.id === templateId)
   const active = slides[activeIdx] || slides[0]
@@ -55,9 +64,17 @@ export default function App() {
         </button>
       </header>
 
+      {/* Mobile Tab Bar */}
+      {isMobile && (
+        <div className="mobile-tabs">
+          <button className={`mobile-tab ${mobileTab === 'edit' ? 'active' : ''}`} onClick={() => setMobileTab('edit')}>✏️ 편집</button>
+          <button className={`mobile-tab ${mobileTab === 'preview' ? 'active' : ''}`} onClick={() => setMobileTab('preview')}>👁️ 미리보기</button>
+        </div>
+      )}
+
       <div className="main">
         {/* Left Panel */}
-        <aside className="sidebar">
+        <aside className={`sidebar ${isMobile && mobileTab !== 'edit' ? 'hidden-mobile' : ''}`}>
           {/* Template Selector */}
           <section className="panel-section">
             <h3 className="section-title">템플릿</h3>
@@ -122,7 +139,7 @@ export default function App() {
         </aside>
 
         {/* Canvas */}
-        <main className="canvas-area">
+        <main className={`canvas-area ${isMobile && mobileTab !== 'preview' ? 'hidden-mobile' : ''}`}>
           <div className="canvas-wrapper">
             <div
               ref={previewRef}
